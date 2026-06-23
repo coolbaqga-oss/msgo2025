@@ -438,8 +438,12 @@ async function loadAndStart() {
   const lockEl = document.getElementById("lock-screen");
   const appEl = document.getElementById("app-main");
 
-  // 로딩 표시
-  lockEl.innerHTML = '<div class="app-loading"><div class="spinner"></div><br>문제를 불러오는 중...</div>';
+  // 이미 앱이 보이는 상태면 잠금화면 안 건드림 (새로고침 시)
+  const isReload = appEl.style.display !== "none";
+
+  if (!isReload) {
+    lockEl.innerHTML = '<div class="app-loading"><div class="spinner"></div><br>문제를 불러오는 중...</div>';
+  }
 
   try {
     const result = await supabaseRPC("get_questions", { auth_token: getToken() });
@@ -464,8 +468,14 @@ async function loadAndStart() {
 
     // 앱 초기화
     initApp();
+
+    if (isReload) showToast("새로고침 완료");
   } catch (e) {
-    lockEl.innerHTML = '<div class="app-loading" style="color:var(--red);">문제를 불러오지 못했습니다.<br>인터넷 연결을 확인하고 새로고침 해주세요.<br><br><button onclick="location.reload()" style="padding:10px 20px; border-radius:8px; border:1px solid var(--red); background:none; color:var(--red); cursor:pointer;">새로고침</button></div>';
+    if (isReload) {
+      showToast("서버 연결 실패. 인터넷을 확인하세요.");
+    } else {
+      lockEl.innerHTML = '<div class="app-loading" style="color:var(--red);">문제를 불러오지 못했습니다.<br>인터넷 연결을 확인하고 새로고침 해주세요.<br><br><button onclick="location.reload()" style="padding:10px 20px; border-radius:8px; border:1px solid var(--red); background:none; color:var(--red); cursor:pointer;">새로고침</button></div>';
+    }
   }
 }
 
@@ -1208,7 +1218,8 @@ function restoreProgress() {
 }
   
 function refreshApp() {
-  location.reload();
+  showToast("새로고침 중...");
+  loadAndStart();
 }
 
 function handleRestore(e) {
@@ -1241,7 +1252,7 @@ function handleRestore(e) {
 }
 
 function resetData() {
-  if (!confirm("모든 기록을 초기화하시겠습니까?")) return;
+  if (!confirm("모든 학습 기록을 초기화하시겠습니까?\n(접근 코드는 유지됩니다)")) return;
   progress = {};
   wrongNotes = {};
   srs = {};
@@ -1249,10 +1260,15 @@ function resetData() {
   stats = {};
   streakInfo = { last: "", streak: 0 };
   state.lastQid = null;
+  state.lastQids = {};
+  state.idx = 0;
+  state.pendingResume = false;
   localStorage.removeItem("mok_last");
+  localStorage.removeItem("mok_lasts");
   saveAll();
   invalidateList();
   render();
+  updateDashboard();
   showToast("초기화 완료");
 }
 
