@@ -75,7 +75,7 @@
   #search-box { width: 100%; padding: 12px; border: 1px solid var(--line); border-radius: 8px; font-size: 0.95rem; }
 
   .mode-tabs { display: flex; margin-bottom: 20px; border-radius: 8px; overflow: hidden; border: 1px solid var(--line); }
-  .mode-tab { flex: 1; padding: 12px; text-align: center; background: var(--paper-2); cursor: pointer; font-weight: bold; border: none; color: var(--muted); }
+  .mode-tab { flex: 1; padding: 12px 4px; text-align: center; background: var(--paper-2); cursor: pointer; font-weight: bold; border: none; color: var(--muted); font-size: clamp(0.72rem, 3.4vw, 0.95rem); white-space: nowrap; }
   .mode-tab.on { background: var(--ink); color: #fff; }
 
   .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 24px; box-shadow: var(--shadow); margin-bottom: 20px; }
@@ -144,6 +144,21 @@
   .rv-chip { padding: 7px 13px; border: 1px solid var(--line); border-radius: 20px; background: #fff; color: var(--muted); font-size: 0.85rem; cursor: pointer; }
   .rv-chip.on { background: var(--burgundy); color: #fff; border-color: var(--burgundy); }
   .rv-group { font-weight: bold; color: var(--burgundy); margin: 20px 2px 10px; font-size: 1rem; border-bottom: 1px solid var(--line); padding-bottom: 6px; }
+
+  /* 헌법 핵심노트 */
+  .nt-toc-item { display: flex; justify-content: space-between; align-items: center; width: 100%; text-align: left;
+    padding: 14px 16px; margin-bottom: 8px; background: #fff; border: 1px solid var(--line); border-radius: 10px;
+    cursor: pointer; font-size: 0.95rem; color: var(--ink); }
+  .nt-toc-item:active { transform: translateY(1px); }
+  .nt-toc-item .cnt { color: var(--muted); font-size: 0.8rem; }
+  .nt-toc-item.fixed { border-color: var(--gold); background: #FFFBF0; }
+  .nt-card { padding: 16px; }
+  .nt-no { display: inline-block; background: var(--burgundy); color: #fff; font-size: 0.72rem; border-radius: 6px; padding: 2px 8px; margin-right: 6px; vertical-align: 2px; }
+  .nt-title { font-weight: bold; font-size: calc(1rem * var(--fscale, 1)); margin-bottom: 10px; word-break: keep-all; }
+  .nt-body { font-size: calc(0.93rem * var(--fscale, 1)); line-height: 1.8; word-break: keep-all; overflow-wrap: anywhere; }
+  .nt-src { margin-top: 10px; font-size: 0.78rem; color: var(--muted); }
+  .nt-fix { display: inline-block; background: #FFF4E0; border: 1px solid #E0B860; color: #8a6410; font-size: 0.7rem; border-radius: 6px; padding: 2px 7px; margin-left: 6px; vertical-align: 1px; }
+  .nt-back { width: 100%; padding: 11px; margin-bottom: 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--card); color: var(--ink); font-weight: bold; cursor: pointer; }
   .rv-card { padding: 16px; }
   .rv-meta { font-size: 0.78rem; color: var(--muted); margin-bottom: 8px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
   .rv-tag { background: var(--paper-2); border: 1px solid var(--line); border-radius: 12px; padding: 1px 8px; color: var(--ink); }
@@ -270,6 +285,7 @@
   .lock-spin { display: inline-block; width: 14px; height: 14px; border: 2px solid var(--line); border-top-color: var(--burgundy); border-radius: 50%; margin-right: 6px; vertical-align: -2px; animation: lockspin 0.8s linear infinite; }
   @keyframes lockspin { to { transform: rotate(360deg); } }
   .q-loading { text-align: center; color: var(--muted); padding: 26px 0; font-size: 0.9rem; }
+  .outdated-badge { display: inline-block; background: #FFF4E0; border: 1px solid #E0B860; color: #8a6410; font-size: 0.72rem; border-radius: 6px; padding: 3px 8px; margin-bottom: 8px; }
 </style>
 </head>
 <body>
@@ -382,6 +398,7 @@
     <button class="mode-tab" data-mode="yearly">기출</button>
     <button class="mode-tab" style="color:var(--red);" data-mode="exam">모의</button>
     <button class="mode-tab" data-mode="review">오답노트</button>
+    <button class="mode-tab" data-mode="notes">노트</button>
   </div>
 
   <div id="content-area"></div>
@@ -421,9 +438,15 @@
 /* ===== 업데이트 내역 =====
    수정할 때마다: BUILD 숫자 +1, BUILD_DATE를 수정한 날짜(yymmdd)로,
    그리고 CHANGELOG 맨 위에 { n: BUILD, date: BUILD_DATE, notes:[...] } 한 덩어리 추가 */
-const BUILD = 30;
+const BUILD = 32;
 const BUILD_DATE = "260717";
 const CHANGELOG = [
+  { n: 32, date: "260717", notes: [
+    "‘노트’ 탭 추가 — 헌법 핵심노트(암기카드 42장, 2025 개정 반영). 목차에서 장을 골라 카드로 학습, 최상단 ‘개정 요약’에서 구판→현행 변경사항 확인"
+  ]},
+  { n: 31, date: "260717", notes: [
+    "개정 전 헌법 문제에 ⚠️ 안내 배지 — ‘출제 당시 헌법 기준’임을 표시해 현행 규정과의 혼동 방지"
+  ]},
   { n: 30, date: "260717", notes: [
     "모의고사 개편 — 설정 화면에서 과목을 직접 선택(학습 탭 필터와 완전 분리), ⚡실전 모드 원터치 시작 추가",
     "기출 개편 — 연도·과목을 골라 그 해 시험지를 문항 순서 그대로 재현(복기용, 시간 제한 없음)"
@@ -709,6 +732,11 @@ async function fetchQ(stub) {
 }
 function prefetchQ(stub) { if (stub && !qContent[stub.id]) fetchQ(stub).catch(() => {}); }
 
+// 개정 전 헌법 문제 안내 배지
+function outdatedBadge(q) {
+  return q.outdated ? `<div class="outdated-badge">⚠️ 출제 당시 헌법 기준 — 현행 규정과 다를 수 있어요</div>` : "";
+}
+
 async function fetchByIds(ids) {
   const out = [];
   for (let i = 0; i < ids.length; i += 60) {
@@ -962,11 +990,75 @@ function render() {
   if (state.mode === "exam") return renderExamMode(cArea);
   if (state.mode === "yearly") return renderYearlyMode(cArea);
   if (state.mode === "review") return renderReviewMode(cArea);
+  if (state.mode === "notes") return renderNotesMode(cArea);
   return renderStudy(cArea);
 }
 
 // 오답노트: 한 번이라도 틀린 문제를 정답·해설과 함께 모아 보여준다(자주 틀린 순)
 // 오답노트 카드 한 장
+// ================== 헌법 핵심노트 ==================
+let notesToc = null;             // [{o, s, n}]
+const notesCache = {};           // sec_order -> cards[]
+let notesView = { sec: null };   // null = 목차
+
+function renderNotesMode(cArea) {
+  if (notesView.sec !== null) return renderNotesSection(cArea, notesView.sec);
+  if (!notesToc) {
+    cArea.innerHTML = `<div class="card q-loading">노트 목차를 불러오는 중...</div>`;
+    sbRpc("get_notes_toc", { input_token: TOKEN }).then(r => {
+      if (!r.success) { cArea.innerHTML = `<div class="card q-loading">${r.msg || "불러오기 실패"}</div>`; return; }
+      notesToc = r.toc || [];
+      if (state.mode === "notes") renderNotesMode(cArea);
+    }).catch(() => {
+      cArea.innerHTML = `<div class="card q-loading">네트워크 오류. <button class="nav-btn" style="margin-top:10px;" onclick="render()">다시 시도</button></div>`;
+    });
+    return;
+  }
+  const items = notesToc.map(t =>
+    `<button class="nt-toc-item ${t.o === 0 && t.s === "개정 요약" ? "fixed" : ""}" onclick="openNotesSection(${t.o})">
+       <span>${t.o === 0 && t.s === "개정 요약" ? "⚠️ " : ""}${t.s}</span><span class="cnt">${t.n}카드</span>
+     </button>`).join("");
+  cArea.innerHTML = `
+    <div class="rv-head">헌법 핵심노트 · 암기카드</div>
+    <div style="font-size:0.82rem; color:var(--muted); margin:0 2px 12px;">2025년 개정 헌법 반영. ⚠️ 배지가 붙은 옛 기출을 만나면 ‘개정 요약’에서 현행 기준을 확인하세요.</div>
+    ${items}`;
+  updateDashboard();
+}
+
+function openNotesSection(sec) {
+  notesView.sec = sec;
+  render();
+}
+
+function renderNotesSection(cArea, sec) {
+  const meta = (notesToc || []).find(t => t.o === sec);
+  const secName = meta ? meta.s : "노트";
+  const draw = cards => {
+    const html = cards.map(c => `
+      <div class="card nt-card">
+        <div class="nt-title">${c.no ? `<span class="nt-no">${String(c.no).padStart(2, "0")}</span>` : ""}${c.title}${c.fix ? `<span class="nt-fix">★ 개정 반영</span>` : ""}</div>
+        <div class="nt-body">${c.body}</div>
+        ${c.src ? `<div class="nt-src">▶ ${c.src}</div>` : ""}
+      </div>`).join("");
+    cArea.innerHTML = `
+      <button class="nt-back" onclick="notesView.sec=null; render();">‹ 목차로</button>
+      <div class="rv-head">${secName}</div>
+      ${html}`;
+    updateDashboard();
+    window.scrollTo({ top: 0 });
+  };
+  if (notesCache[sec]) return draw(notesCache[sec]);
+  cArea.innerHTML = `<div class="card q-loading">카드를 불러오는 중...</div>`;
+  sbRpc("get_notes_section", { input_token: TOKEN, sec: sec }).then(r => {
+    if (!r.success) { cArea.innerHTML = `<div class="card q-loading">${r.msg || "불러오기 실패"}<br><button class="nav-btn" style="margin-top:10px;" onclick="render()">다시 시도</button></div>`; return; }
+    notesCache[sec] = r.cards || [];
+    if (state.mode === "notes" && notesView.sec === sec) draw(notesCache[sec]);
+  }).catch(() => {
+    cArea.innerHTML = `<div class="card q-loading">네트워크 오류. <button class="nav-btn" style="margin-top:10px;" onclick="render()">다시 시도</button></div>`;
+  });
+}
+// ====================================================
+
 function reviewCardHtml(qid, byId) {
   const stub = byId[qid];
   const q = stub && qContent[stub.id];
@@ -983,6 +1075,7 @@ function reviewCardHtml(qid, byId) {
   const exp = q.e ? `<div class="rv-exp">${q.e}</div>` : "";
   return `<div class="card rv-card">
     <div class="rv-meta"><span>${q.year}년 ${q.subj} · ${cnt}회 틀림</span>${tag}${status}</div>
+    ${outdatedBadge(q)}
     <div class="rv-q">${q.q}</div>
     <div class="rv-opts">${opts}</div>
     ${exp}
@@ -1197,6 +1290,7 @@ function renderStudy(cArea) {
     const body = document.getElementById("q-body");
     if (!body) return;
     body.innerHTML = `
+      ${outdatedBadge(q)}
       <div class="q-text">${q.q}</div>
       <div id="options-area">
         ${optionRowsHtml(q.opts, "checkAns")}
@@ -1392,6 +1486,7 @@ function renderExamScreen(cArea) {
     const body = document.getElementById("q-body");
     if (!body) return;
     body.innerHTML = `
+      ${outdatedBadge(q)}
       <div class="q-text">${q.q}</div>
       <div id="options-area">
         ${optionRowsHtml(q.opts, "pickExam")}
