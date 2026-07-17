@@ -111,7 +111,12 @@
     background: rgba(255,255,255,0.96); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
     border-top: 1px solid var(--line);
   }
-  .study-nav.show { display: flex; max-width: 640px; margin: 0 auto; }
+  .study-nav.show { display: flex; max-width: 640px; margin: 0 auto; flex-wrap: wrap; }
+  .kbd-hint { display: none; flex-basis: 100%; text-align: center; font-size: 0.72rem; color: var(--muted); padding-bottom: 7px; }
+  .kbd-hint b { color: var(--ink); font-weight: 600; }
+  @media (min-width: 700px) and (hover: hover) and (pointer: fine) {
+    .kbd-hint { display: block; }
+  }
   .snav-btn {
     flex: 1; padding: 15px; border-radius: 10px; font-weight: bold; font-size: 1rem;
     border: 1px solid var(--line); background: var(--card); color: var(--ink); cursor: pointer;
@@ -262,6 +267,8 @@
   .lock-btn:disabled { opacity: 0.6; }
   .lock-msg { min-height: 20px; margin-top: 12px; font-size: 0.85rem; color: var(--red); }
   .lock-msg.ok { color: var(--green); }
+  .lock-spin { display: inline-block; width: 14px; height: 14px; border: 2px solid var(--line); border-top-color: var(--burgundy); border-radius: 50%; margin-right: 6px; vertical-align: -2px; animation: lockspin 0.8s linear infinite; }
+  @keyframes lockspin { to { transform: rotate(360deg); } }
   .q-loading { text-align: center; color: var(--muted); padding: 26px 0; font-size: 0.9rem; }
 </style>
 </head>
@@ -283,7 +290,9 @@
     <div style="padding:16px 20px; font-size:0.92rem; line-height:1.8;">
       <div style="margin-bottom:10px;">📚 <b>필터</b>에서 과목·연도를 골라 학습을 시작하세요. 틀린 문제는 <b>오답노트</b> 탭에 자동으로 모입니다.</div>
       <div style="margin-bottom:10px;">💾 학습 기록은 <b>이 기기에만</b> 저장돼요. 상단 <b>백업</b>을 가끔 눌러 파일로 보관하세요. 기기를 바꿀 땐 백업 파일을 새 기기에서 <b>복원</b>하면 이어집니다.</div>
-      <div style="margin-bottom:14px;">📱 접근코드는 <b>기기 1대</b>에 등록됩니다. 기기 변경 시 관리자에게 문의해주세요.</div>
+      <div style="margin-bottom:10px;">📱 접근코드는 <b>기기 1대</b>에 등록됩니다. 기기 변경 시 관리자에게 문의해주세요.</div>
+      <div style="margin-bottom:10px;">⌨️ 키보드가 있다면 <b>1~5</b>나 <b>Q·W·E·R</b>로 보기를 고르고 <b>←→ / Space</b>로 넘길 수 있어요.</div>
+      <div id="contact-line" style="margin-bottom:14px; display:none;">💬 문의: <a id="contact-link" href="#" target="_blank" style="color:var(--burgundy); font-weight:bold;">관리자에게 연락하기</a></div>
       <button class="nav-btn primary" style="width:100%;" onclick="closeWelcome()">시작하기</button>
     </div>
   </div>
@@ -380,6 +389,7 @@
 <div id="toast"></div>
 
 <div class="study-nav" id="study-nav">
+  <div class="kbd-hint">⌨️ <b>1~5</b>·<b>Q W E R</b> 보기 선택 &nbsp;·&nbsp; <b>← →</b> / <b>Space</b> / <b>Enter</b> 이동</div>
   <button class="snav-btn" onclick="moveIdx(-1)">‹ 이전</button>
   <button class="snav-btn primary" onclick="moveIdx(1)">다음 ›</button>
 </div>
@@ -412,10 +422,11 @@
    수정할 때마다: BUILD 숫자 +1, BUILD_DATE를 수정한 날짜(yymmdd)로,
    그리고 CHANGELOG 맨 위에 { n: BUILD, date: BUILD_DATE, notes:[...] } 한 덩어리 추가 */
 const BUILD = 29;
-const BUILD_DATE = "260716";
+const BUILD_DATE = "260717";
 const CHANGELOG = [
-  { n: 29, date: "260716", notes: [
+  { n: 29, date: "260717", notes: [
     "정식(코드 인증) 버전 — 접근코드 입장(1코드 1기기), 자동 로그인, 문제는 서버에서 한 문제씩 안전하게 로드",
+    "키보드 단축키 안내 표시(데스크탑) · 로딩 스피너와 연결 지연 시 재시도 안내 · 빠른 연타 시 중복 요청 방지",
     "이 버전은 인터넷 연결이 필요합니다. 검색 기능은 지원되지 않습니다"
   ]},
   { n: 28, date: "260624", notes: [
@@ -579,6 +590,8 @@ let allQuestions = [];  // 서버 목록(번호표)만: {id, subj, year, no}
 const SB_URL = "https://vhdvwrxseckkldpntjpk.supabase.co";
 const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZoZHZ3cnhzZWNra2xkcG50anBrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIxOTEwNDUsImV4cCI6MjA5Nzc2NzA0NX0.bEL2ktJzuqa0GtsbZXEalKf5kub63Is8_OoQGsoMghk";
 let TOKEN = localStorage.getItem("mok_token") || "";
+// 문의 링크 (오픈카톡 등). 값을 넣으면 환영 안내에 문의 줄이 자동 표시됩니다.
+const CONTACT_URL = "";
 
 async function sbRpc(fn, args) {
   const res = await fetch(`${SB_URL}/rest/v1/rpc/${fn}`, {
@@ -596,9 +609,25 @@ function getDeviceId() {
   return d;
 }
 
-function lockMsg(text, ok) {
+function lockMsg(text, ok, spin) {
   const el = document.getElementById("lock-msg");
-  if (el) { el.textContent = text; el.classList.toggle("ok", !!ok); }
+  if (el) {
+    el.innerHTML = (spin ? '<span class="lock-spin"></span>' : '') + text;
+    el.classList.toggle("ok", !!ok);
+  }
+}
+
+let lockSlowTimer = null;
+function startLockSlowWatch() {
+  clearTimeout(lockSlowTimer);
+  lockSlowTimer = setTimeout(() => {
+    const lock = document.getElementById("lock-screen");
+    if (lock && !lock.classList.contains("hide")) {
+      lockMsg('연결이 느립니다. <button class="jump-btn" style="margin-left:6px;" onclick="location.reload()">다시 시도</button>', false);
+      const btn = document.getElementById("lock-btn");
+      if (btn) btn.disabled = false;
+    }
+  }, 12000);
 }
 
 async function tryActivate() {
@@ -608,15 +637,18 @@ async function tryActivate() {
   inp.value = code;
   if (!code) { lockMsg("코드를 입력해주세요."); return; }
   btn.disabled = true;
-  lockMsg("확인 중...", true);
+  lockMsg("확인 중...", true, true);
+  startLockSlowWatch();
   try {
     const r = await sbRpc("activate_code", { input_code: code, device: getDeviceId() });
-    if (!r.success) { lockMsg(r.msg || "인증에 실패했습니다."); btn.disabled = false; return; }
+    if (!r.success) { clearTimeout(lockSlowTimer);
+    lockMsg(r.msg || "인증에 실패했습니다."); btn.disabled = false; return; }
     TOKEN = r.token;
     localStorage.setItem("mok_token", TOKEN);
-    lockMsg("인증 완료! 문제 목록을 불러오는 중...", true);
+    lockMsg("인증 완료! 문제 목록을 불러오는 중...", true, true);
     await loadListAndStart();
   } catch (e) {
+    clearTimeout(lockSlowTimer);
     lockMsg("네트워크 오류입니다. 인터넷 연결을 확인해주세요.");
     btn.disabled = false;
   }
@@ -627,14 +659,17 @@ async function loadListAndStart() {
     const r = await sbRpc("get_question_list", { input_token: TOKEN });
     if (!r.success) {
       TOKEN = ""; localStorage.removeItem("mok_token");
+      clearTimeout(lockSlowTimer);
       lockMsg(r.msg || "인증이 만료되었습니다. 코드를 다시 입력해주세요.");
       const btn = document.getElementById("lock-btn"); if (btn) btn.disabled = false;
       return;
     }
     allQuestions = (r.list || []).map(s => ({ ...s, no: Number(s.no) }));
+    clearTimeout(lockSlowTimer);
     document.getElementById("lock-screen").classList.add("hide");
     initApp();
   } catch (e) {
+    clearTimeout(lockSlowTimer);
     lockMsg("목록을 불러오지 못했습니다. 잠시 후 다시 시도해주세요.");
     const btn = document.getElementById("lock-btn"); if (btn) btn.disabled = false;
   }
@@ -642,20 +677,29 @@ async function loadListAndStart() {
 
 // 문제 본문 캐시(메모리 전용, 세션 동안만) + 단건 로드 + 다음 문제 미리받기
 const qContent = {};
+const qPending = {};   // 진행 중 요청 재사용(연타 시 중복 요청 방지)
 async function fetchQ(stub) {
   if (!stub) return null;
   if (qContent[stub.id]) return qContent[stub.id];
-  const r = await sbRpc("get_question", { input_token: TOKEN, qid: stub.id });
-  if (!r.success) {
-    if (r.rate) throw { rateMsg: r.msg };
-    TOKEN = ""; localStorage.removeItem("mok_token");
-    location.reload();
-    throw new Error("auth");
-  }
-  const q = r.question;
-  q.no = Number(q.no); q.a = Number(q.a);
-  qContent[stub.id] = q;
-  return q;
+  if (qPending[stub.id]) return qPending[stub.id];
+  qPending[stub.id] = (async () => {
+    try {
+      const r = await sbRpc("get_question", { input_token: TOKEN, qid: stub.id });
+      if (!r.success) {
+        if (r.rate) throw { rateMsg: r.msg };
+        TOKEN = ""; localStorage.removeItem("mok_token");
+        location.reload();
+        throw new Error("auth");
+      }
+      const q = r.question;
+      q.no = Number(q.no); q.a = Number(q.a);
+      qContent[stub.id] = q;
+      return q;
+    } finally {
+      delete qPending[stub.id];
+    }
+  })();
+  return qPending[stub.id];
 }
 function prefetchQ(stub) { if (stub && !qContent[stub.id]) fetchQ(stub).catch(() => {}); }
 
@@ -1978,6 +2022,11 @@ function initApp() {
 
   // 첫 입장 안내 (1회)
   if (!localStorage.getItem("mok_welcomed")) {
+    if (CONTACT_URL) {
+      const cl = document.getElementById("contact-line");
+      const ca = document.getElementById("contact-link");
+      if (cl && ca) { ca.href = CONTACT_URL; cl.style.display = "block"; }
+    }
     document.getElementById("welcome-modal").classList.add("show");
   }
 }
@@ -1990,7 +2039,8 @@ function closeWelcome() {
 // 부팅: 저장된 토큰이 있으면 자동 로그인, 없으면 잠금화면 대기
 window.onload = () => {
   if (TOKEN) {
-    lockMsg("자동 로그인 중...", true);
+    lockMsg("자동 로그인 중...", true, true);
+    startLockSlowWatch();
     loadListAndStart();
   }
   const inp = document.getElementById("lock-code");
